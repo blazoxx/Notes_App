@@ -14,7 +14,13 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
   credentials: true
 }));
 
@@ -26,8 +32,7 @@ app.use('/api/notes', noteRoutes);
 
 // Root route: redirect to frontend if configured, otherwise return a simple JSON message
 app.get('/', (req, res) => {
-  const clientUrl = process.env.CLIENT_ORIGIN;
-  if (clientUrl) return res.redirect(clientUrl);
+  if (allowedOrigins[1]) return res.redirect(allowedOrigins[1]);
   return res.json({ message: 'API running. See /api/health' });
 });
 
