@@ -7,10 +7,16 @@ const noteRoutes = require('./routes/noteRoutes');
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://notes-app-tan-seven-96.vercel.app"
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-  credentials: true,
+  origin: allowedOrigins,
+  credentials: true
 }));
+
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
