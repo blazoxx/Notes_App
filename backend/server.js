@@ -17,6 +17,13 @@ app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/notes', noteRoutes);
 
+// Root route: redirect to frontend if configured, otherwise return a simple JSON message
+app.get('/', (req, res) => {
+  const clientUrl = process.env.CLIENT_ORIGIN;
+  if (clientUrl) return res.redirect(clientUrl);
+  return res.json({ message: 'API running. See /api/health' });
+});
+
 // 404
 app.use((req, res) => res.status(404).json({ message: `Route ${req.originalUrl} not found` }));
 
