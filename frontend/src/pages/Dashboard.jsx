@@ -8,12 +8,15 @@ import NoteCard from '../components/NoteCard.jsx';
 import NoteEditor from '../components/NoteEditor.jsx';
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateName } = useAuth();
   const { theme, toggle } = useTheme();
   const [notes, setNotes] = useState([]);
   const [q, setQ] = useState('');
   const [editing, setEditing] = useState(null); // note or {} for new
   const [loading, setLoading] = useState(true);
+  const [nameOpen, setNameOpen] = useState(false);
+  const [nameValue, setNameValue] = useState(user?.name || '');
+  const [savingName, setSavingName] = useState(false);
 
   const load = async (query = '') => {
     setLoading(true);
@@ -32,6 +35,10 @@ export default function Dashboard() {
     const t = setTimeout(() => load(q), 300);
     return () => clearTimeout(t);
   }, [q]);
+
+  useEffect(() => {
+    setNameValue(user?.name || '');
+  }, [user]);
 
   const save = async (payload) => {
     try {
@@ -70,6 +77,23 @@ export default function Dashboard() {
     }
   };
 
+  const saveName = async (e) => {
+    e.preventDefault();
+    const next = nameValue.trim();
+    if (next.length < 2) return toast.error('Name too short');
+
+    setSavingName(true);
+    try {
+      await updateName(next);
+      toast.success('Name updated');
+      setNameOpen(false);
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Name update failed');
+    } finally {
+      setSavingName(false);
+    }
+  };
+
   const { pinned, others } = useMemo(() => ({
     pinned: notes.filter((n) => n.pinned),
     others: notes.filter((n) => !n.pinned),
@@ -93,7 +117,13 @@ export default function Dashboard() {
           <button onClick={toggle} className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200" title="Toggle theme">
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
-          <span className="hidden sm:inline text-sm text-neutral-500 dark:text-neutral-400">{user?.name}</span>
+          <button
+            onClick={() => setNameOpen(true)}
+            className="hidden sm:inline text-sm text-neutral-500 dark:text-neutral-400 hover:text-amber-600 dark:hover:text-amber-400"
+            title="Edit name"
+          >
+            {user?.name}
+          </button>
           <button onClick={logout} className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200" title="Logout">
             <LogOut className="w-5 h-5" />
           </button>
@@ -136,6 +166,41 @@ export default function Dashboard() {
 
       {editing && (
         <NoteEditor initial={editing} onClose={() => setEditing(null)} onSave={save} />
+      )}
+
+      {nameOpen && (
+        <div className="fixed inset-0 z-20 bg-black/40 flex items-center justify-center px-4" onClick={() => setNameOpen(false)}>
+          <form
+            onSubmit={saveName}
+            className="w-full max-w-sm rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Edit name</h2>
+            <label className="block text-sm mb-1 text-neutral-700 dark:text-neutral-200">Display name</label>
+            <input
+              autoFocus
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+              className="w-full mb-4 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-400"
+              placeholder="Your name"
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setNameOpen(false)}
+                className="px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-200"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={savingName}
+                className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-medium"
+              >
+                {savingName ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   );

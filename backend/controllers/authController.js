@@ -23,6 +23,7 @@ exports.register = async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({
+      message: err.message,
       error: err.message
     });
   }
@@ -47,4 +48,25 @@ exports.login = async (req, res) => {
 
 exports.me = async (req, res) => {
   res.json({ user: req.user });
+};
+
+exports.updateMe = async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Name is required' });
+    }
+
+    req.user.name = name.trim();
+    await req.user.save();
+
+    res.json({ user: req.user });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: err.message,
+      error: err.message,
+    });
+  }
 };
