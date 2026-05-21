@@ -9,7 +9,8 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://notes-app-tan-seven-96.vercel.app"
+  "https://notes-app-tan-seven-96.vercel.app",
+  "https://my-notes-ls.vercel.app"
 ];
 
 app.use(cors({
