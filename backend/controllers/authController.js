@@ -6,6 +6,8 @@ const signToken = (id) =>
 
 exports.register = async (req, res) => {
   try {
+    console.log(req.body);
+
     const { name, email, password } = req.body;
     if (!name || !email || !password)
       return res.status(400).json({ message: 'Name, email and password are required' });
@@ -19,7 +21,10 @@ exports.register = async (req, res) => {
     const token = signToken(user._id);
     res.status(201).json({ user, token });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.log(err);
+    res.status(500).json({
+      error: err.message
+    });
   }
 };
 
